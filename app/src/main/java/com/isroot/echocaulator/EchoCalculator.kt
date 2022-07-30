@@ -4,7 +4,8 @@ import android.util.Log
 
 class EchoCalculator {
     val originProducts: ArrayList<EchoProduct> = ArrayList()
-    val productsSortedByEfficiency: ArrayList<EchoProduct> = ArrayList()
+    var productsSortedByEfficiency: ArrayList<EchoProduct> = ArrayList()
+    var productsSortedByUnit: ArrayList<EchoProduct> = ArrayList()
     lateinit var biggestUnit:EchoProduct
 
     init {
@@ -19,7 +20,8 @@ class EchoCalculator {
 
     fun calc(targetEcho: Int){
         findBiggestProduct()
-        sortProductsByEfficiency()
+        productsSortedByEfficiency.addAll(originProducts.sortedBy(EchoProduct::efficiency))
+        productsSortedByUnit.addAll(originProducts.sortedBy(EchoProduct::unit))
     }
 
     fun findBiggestProduct(){
@@ -28,14 +30,6 @@ class EchoCalculator {
             if(biggestUnit.unit < echoProduct.unit){
                 biggestUnit = echoProduct
             }
-        }
-    }
-
-    fun sortProductsByEfficiency(){
-        var tmpProducts: ArrayList<EchoProduct> = originProducts
-        while (tmpProducts.size > 0) {
-            val bestEfficiencyProduct = tmpProducts.removeAt(findBestEfficiencyIndex(tmpProducts))
-            productsSortedByEfficiency.add(bestEfficiencyProduct)
         }
     }
     fun findBestEfficiencyIndex(products: ArrayList<EchoProduct>): Int{
