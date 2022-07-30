@@ -19,12 +19,7 @@ class EchoCalculator {
 
     fun calc(targetEcho: Int){
         findBiggestProduct()
-        Log.d("isroot", "biggestUnit is ${biggestUnit.unit}")
         sortProductsByEfficiency()
-        Log.d("isroot", "productsSortedByEfficiency are")
-        for(product in productsSortedByEfficiency) {
-            Log.d("isroot", "product unit is ${product.unit}, efficiency is ${product.efficiency}")
-        }
     }
 
     fun findBiggestProduct(){
