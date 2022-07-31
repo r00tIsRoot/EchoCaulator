@@ -16,14 +16,30 @@
         android:layout_height="match_parent"
         tools:context=".MainActivity">
 
+        <EditText
+            android:id="@+id/targetEchoET"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintVertical_chainStyle="packed"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/calcStartTV"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintWidth_default="percent"
+            app:layout_constraintWidth_percent="0.75"
+            android:text="@={viewModel.targetEchoStr}"
+            android:inputType="number" />
+
+
         <TextView
+            android:id="@+id/calcStartTV"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Hello World!"
+            android:text="Calc Start"
+            app:layout_constraintTop_toBottomOf="@+id/targetEchoET"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
             android:onClick="@{()->viewModel.calc()}"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
