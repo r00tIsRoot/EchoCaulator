@@ -18,13 +18,13 @@ class EchoCalculator{
     private var result: HashMap<Int, EchoProduct> = HashMap()
 
     init {
-        originProducts.put(723, EchoProduct(723, 14000))
-        originProducts.put(6918, EchoProduct(6918, 140000))
-        originProducts.put(2123, EchoProduct(2123, 44000))
-        originProducts.put(3498, EchoProduct(3498, 75000))
-        originProducts.put(194, EchoProduct(194, 4200))
-        originProducts.put(320, EchoProduct(320, 7000))
-        originProducts.put(60, EchoProduct(60, 1500))
+        originProducts.put(723, EchoProduct(723, 14000, 0))
+        originProducts.put(6918, EchoProduct(6918, 140000, 0))
+        originProducts.put(2123, EchoProduct(2123, 44000, 0))
+        originProducts.put(3498, EchoProduct(3498, 75000, 0))
+        originProducts.put(194, EchoProduct(194, 4200, 0))
+        originProducts.put(320, EchoProduct(320, 7000, 0))
+        originProducts.put(60, EchoProduct(60, 1500, 0))
 
         findBiggestProduct()
         productsSortedByEfficiency.addAll(originProducts.values.sortedBy(EchoProduct::efficiency))
@@ -37,7 +37,7 @@ class EchoCalculator{
     private fun initResult() {
         for (product in productsSortedByUnit) {
             resultHM.put(product.unit, 0)
-            result.put(product.unit, product)
+            result.put(product.unit, product.getCopied())
         }
         results = ArrayList()
         //result = HashMap()
@@ -54,6 +54,7 @@ class EchoCalculator{
             resultHM[bestEfficiencyProduct.unit] = quotient
             minorTargetEcho = targetEcho - (bestEfficiencyProduct.unit * quotient)
         }
+        Log.d("dodo", "bestEfficiencyProduct unit is ${bestEfficiencyProduct.unit}, quotient is $quotient")
 
         calcRemainderMostEfficient(minorTargetEcho)
 //        var finalEcho = 0
@@ -73,6 +74,9 @@ class EchoCalculator{
 //        Log.d("dodo", "")
 
         calcRemainder(minorTargetEcho)
+        if(quotient > 0) {
+            result[bestEfficiencyProduct.unit]!!.number += quotient
+        }
         var finalEcho = 0
         var finalPrice = 0
         for(productKey in result.keys) {
@@ -135,61 +139,94 @@ class EchoCalculator{
     private fun initMaximumByProduct(targetEcho: Int) {
         for (product in productsSortedByUnit) {
             maximumByProduct.put(product.unit, (targetEcho/product.unit)+1)
+            Log.d("dodo", "maximumByProduct unit is ${product.unit}, quotient is ${(targetEcho/product.unit)+1}")
         }
     }
     private fun calcMain(targetEcho: Int) {
-        calcRecursion(targetEcho, targetEcho, 0, 0)
+        val initialList: ArrayList<EchoProduct> = ArrayList()
+        for (product in productsSortedByEfficiency) {
+            val tmpProduct = EchoProduct(product.unit, product.price)
+            initialList.add(tmpProduct)
+        }
+        calcRecursion(targetEcho, initialList, 0, 0)
         val costs: ArrayList<Int> = ArrayList()
         for (result in results) {
             costs.add(calcCost(result))
         }
         countProduct(results[minIndex(costs)])
     }
-    private fun calcRecursion(targetEcho: Int, minorTarget: Int, unitIndex: Int, qutientIndex: Int): ArrayList<EchoProduct> {
-        val calcResult: ArrayList<EchoProduct> = ArrayList()
-        val currentEchoProduct = originProducts.values.toList()[unitIndex]
-        val minorTargetEcho = minorTarget - currentEchoProduct.unit
-        currentEchoProduct.number += 1
-        calcResult.add(currentEchoProduct)
 
-        if (minorTargetEcho <= 0) {
-            return calcResult
+    private fun calcRecursion(targetEcho: Int, list: ArrayList<EchoProduct>, unitMaxIndex: Int, unitIndex: Int) {
+        Log.d("dodo", "calcRecursion $unitMaxIndex || $unitIndex || ${list[0].number} ${list[1].number} ${list[2].number} ${list[3].number} ${list[4].number} ${list[5].number} ${list[6].number}")
+        if(unitIndex >= list.size || unitIndex<0) {
+            return
         }
-
-        if (qutientIndex < maximumByProduct.values.toList()[unitIndex]) {
-            calcResult.addAll(calcRecursion(targetEcho, minorTargetEcho,unitIndex, qutientIndex+1))
-
-            if (calcGained(calcResult) >= targetEcho) {
-                results.add(calcResult)
+        val gainedEcho = calcGained(list)
+        val copiedList = copyProducts(list)
+        if(gainedEcho >= targetEcho) {
+            results.add(list)
+            if(unitIndex < unitMaxIndex) {
+                for (indexToInitialize in 0..unitIndex) {
+                    copiedList[indexToInitialize].number = 0
+                }
+                calcRecursion(targetEcho, copiedList, unitMaxIndex, unitIndex + 1)
+                return
             }
         }
-        if (unitIndex < maximumByProduct.size-1) {
-            calcResult.addAll(calcRecursion(targetEcho, minorTargetEcho,unitIndex+1, 0))
+
+        val currentUnitInCopiedList = copiedList[unitIndex]
+        if(currentUnitInCopiedList.number < maximumByProduct[currentUnitInCopiedList.unit]!!) {
+            copiedList[unitIndex].number += 1
+            calcRecursion(targetEcho, copiedList, unitMaxIndex, unitIndex)
+            return
         }
 
-        return calcResult
+        for(indexToInitialize in 0..unitIndex) {
+            copiedList[indexToInitialize].number = 0
+        }
+        if(unitIndex < unitMaxIndex) {
+            for(minorUnitIndex in unitIndex..0) {
+                calcRecursion(targetEcho, copiedList, minorUnitIndex, 0)
+            }
+            calcRecursion(targetEcho, copiedList, unitMaxIndex, unitIndex+1)
+            return
+        }
+        if(unitMaxIndex < maximumByProduct.size-1) {
+            copiedList[unitMaxIndex+1].number = 1
+            calcRecursion(targetEcho, copiedList, unitMaxIndex+1, 0)
+            return
+        }
+    }
+    private fun copyProducts(products: ArrayList<EchoProduct>): ArrayList<EchoProduct> {
+        val copiedProducts: ArrayList<EchoProduct> = ArrayList()
+        for (product in products) {
+            val newProduct = product.getCopied()
+            copiedProducts.add(newProduct)
+        }
+        return copiedProducts
     }
     private fun calcGained(products: ArrayList<EchoProduct>): Int {
         var result = 0
         for(product in products) {
-            result += product.unit
+            result += (product.unit * product.number)
         }
         return result
     }
     private fun calcCost(products: ArrayList<EchoProduct>): Int {
         var result = 0
         for(product in products) {
-            result += product.price
+            result += (product.price * product.number)
         }
         return result
     }
     private fun minIndex(arg: ArrayList<Int>): Int {
         var resultIndex = 0
-        val minValue = Int.MAX_VALUE
+        var minValue = Int.MAX_VALUE
 
         for (index in 0 until arg.size) {
             if (minValue >= arg[index]) {
                 resultIndex = index
+                minValue = arg[index]
             }
         }
 
@@ -197,7 +234,7 @@ class EchoCalculator{
     }
     private fun countProduct(products: ArrayList<EchoProduct>) {
         for (product in products) {
-            result[product.unit]!!.number.plus(1)
+            result[product.unit]!!.number += product.number
         }
     }
 }
