@@ -34,6 +34,8 @@ class EchoCalculator{
         initResult()
     }
 
+    // 풀리퀘스트 테스트
+
     private fun initResult() {
         for (product in productsSortedByUnit) {
             resultHM.put(product.unit, 0)
